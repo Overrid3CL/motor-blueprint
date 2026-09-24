@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Plano tecnico animado de un motor de 4 cilindros en linea DOHC 16V: secuencia de montaje y cinematica en marcha.">
+<title>Motor Blueprint - Motor 4 cilindros en linea DOHC 16V</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="./css/styles.css">
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="./js/main.js"></script>
+</head>
+
+<body>
+<div id="app">
+
+  <!-- ===== Lienzo 3D (lo rellena main.js) ===== -->
+  <div id="viewport"></div>
+
+  <!-- ===== Papel milimetrado, por encima del canvas ===== -->
+  <div id="milimetrado" aria-hidden="true"></div>
+
+  <!-- ===== Etiquetas CSS2D (las rellena main.js) ===== -->
+  <div id="labels"></div>
+
+  <!-- ===== Columna izquierda: cajetin + controles ===== -->
+  <div class="columna columna--izq">
+
+    <!-- Cajetin tecnico -->
+    <section id="cajetin" class="panel">
+      <div class="panel__cabecera">
+        <span class="panel__marca">MOTOR BLUEPRINT &middot; MB-0001</span>
+        <span class="panel__marca panel__marca--der">HOJA 1/1</span>
+      </div>
+      <h1 class="cajetin__titulo">Motor 4 cilindros en linea &mdash; DOHC 16V</h1>
+      <p class="cajetin__subtitulo">Plano de despiece y secuencia de montaje</p>
+
+      <table class="tabla-datos">
+        <caption class="visualmente-oculto">Datos tecnicos del motor</caption>
+        <tbody>
+          <tr><th scope="row">Cilindrada</th><td>1998 cc</td></tr>
+          <tr><th scope="row">Diametro x carrera</th><td>86.0 x 86.0 mm</td></tr>
+          <tr><th scope="row">Relacion compresion</th><td>10.5 : 1</td></tr>
+          <tr><th scope="row">Orden de encendido</th><td>1 - 3 - 4 - 2</td></tr>
+          <tr><th scope="row">Distribucion</th><td>DOHC 16V</td></tr>
+          <tr><th scope="row">Escala</th><td>1:1 &mdash; 1 u = 1 cm</td></tr>
+          <tr><th scope="row">Revision</th><td>REV. A</td></tr>
+          <tr><th scope="row">Fecha</th><td>24-09-2026</td></tr>
+        </tbody>
+      </table>
+
+      <p class="cajetin__estado">ESTADO: <span id="estado-lectura">INICIANDO</span></p>
+    </section>
+
+    <!-- Controles: marcha, vista, capas -->
+    <section id="panel-control" class="panel">
+
+      <div class="bloque">
+        <h2 class="bloque__titulo">Motor en marcha</h2>
+        <div class="fila fila--marcha">
+          <label class="interruptor">
+            <input type="checkbox" id="chk-marcha">
+            <span class="interruptor__pista" aria-hidden="true"><i></i></span>
+            <span class="interruptor__texto" id="marcha-estado">OFF</span>
+          </label>
+          <output class="lectura lectura--grande" id="rpm-lectura" for="rpm-rango">0 rpm</output>
+        </div>
+        <div class="fila">
+          <label class="etiqueta-mini" for="rpm-rango">RPM</label>
+          <input type="range" id="rpm-rango" min="600" max="7000" step="50" value="900"
+                 aria-label="Regimen del motor en revoluciones por minuto">
+        </div>
+        <div class="escala-rango" aria-hidden="true"><span>600</span><span>3800</span><span>7000</span></div>
+      </div>
+
+      <div class="bloque">
+        <h2 class="bloque__titulo">Vista</h2>
+        <div class="grupo-botones" id="grupo-vista" role="group" aria-label="Vistas de camara">
+          <button type="button" class="chip activo" data-vista="iso">ISO</button>
+          <button type="button" class="chip" data-vista="frontal">Frontal</button>
+          <button type="button" class="chip" data-vista="lateral">Lateral</button>
+          <button type="button" class="chip" data-vista="superior">Superior</button>
+          <button type="button" class="chip" data-vista="detalle">Detalle</button>
+        </div>
+      </div>
+
+      <div class="bloque">
+        <h2 class="bloque__titulo">Capas</h2>
+        <ul class="lista-capas" id="lista-capas">
+          <li><label class="casilla"><input type="checkbox" data-capa="rejilla" checked><span>Rejilla</span><kbd>G</kbd></label></li>
+          <li><label class="casilla"><input type="checkbox" data-capa="etiquetas" checked><span>Etiquetas</span><kbd>L</kbd></label></li>
+          <li><label class="casilla"><input type="checkbox" data-capa="corte"><span>Corte (media seccion)</span><kbd>C</kbd></label></li>
+          <li><label class="casilla"><input type="checkbox" data-capa="explosion"><span>Vista explosionada</span><kbd>E</kbd></label></li>
+          <li><label class="casilla"><input type="checkbox" data-capa="solidos" checked><span>Superficies solidas</span><kbd>S</kbd></label></li>
+        </ul>
+      </div>
+
+    </section>
+  </div>
+
+  <!-- ===== Boton para abrir la secuencia en pantallas estrechas ===== -->
+  <button type="button" id="btn-panel" class="boton boton--flotante" aria-expanded="false" aria-controls="panel-secuencia">
+    Secuencia
+  </button>
+
+  <!-- ===== Columna derecha: secuencia de montaje + HUD ===== -->
+  <div class="columna columna--der">
+
+    <section id="panel-secuencia" class="panel panel--scroll">
+      <div class="panel__cabecera">
+        <h2 class="panel__titulo">Secuencia de montaje</h2>
+        <button type="button" id="btn-cerrar-panel" class="boton boton--icono" aria-label="Cerrar panel">&times;</button>
+      </div>
+
+      <ol id="lista-pasos" class="lista-pasos" aria-label="Pasos de montaje"></ol>
+
+      <div class="panel__separador" role="presentation"></div>
+
+      <h3 class="bloque__titulo">Despiece por conjunto</h3>
+      <div id="lista-modulos" class="lista-modulos"></div>
+
+      <div class="panel__separador" role="presentation"></div>
+
+      <div class="info-pieza">
+        <h3 class="bloque__titulo">Pieza seleccionada</h3>
+        <p class="info-pieza__titulo" id="pieza-titulo">&mdash;</p>
+        <p class="info-pieza__desc" id="pieza-desc">Selecciona una pieza del despiece o un paso de la secuencia.</p>
+      </div>
+    </section>
+
+    <section id="hud" class="panel panel--hud">
+      <div class="hud__fila">
+        <span class="etiqueta-mini">FPS</span>
+        <output class="lectura" id="fps-lectura">--</output>
+      </div>
+      <dl class="ayuda-teclas" id="ayuda-teclas">
+        <div><dt><kbd>Espacio</kbd></dt><dd>Reproducir / pausa</dd></div>
+        <div><dt><kbd>R</kbd></dt><dd>Reiniciar</dd></div>
+        <div><dt><kbd>&larr;</kbd><kbd>&rarr;</kbd></dt><dd>Paso anterior / siguiente</dd></div>
+        <div><dt><kbd>E</kbd></dt><dd>Explosionada</dd></div>
+        <div><dt><kbd>M</kbd></dt><dd>Motor en marcha</dd></div>
+        <div><dt><kbd>C</kbd></dt><dd>Corte</dd></div>
+        <div><dt><kbd>G</kbd></dt><dd>Rejilla</dd></div>
+        <div><dt><kbd>L</kbd></dt><dd>Etiquetas</dd></div>
+        <div><dt><kbd>S</kbd></dt><dd>Superficies</dd></div>
+        <div><dt><kbd>1</kbd>..<kbd>5</kbd></dt><dd>Vistas</dd></div>
+      </dl>
+    </section>
+
+  </div>
+
+  <!-- ===== Barra inferior de transporte ===== -->
+  <section id="transporte" class="panel">
+    <div class="transporte__botones">
+      <button type="button" id="btn-reset" class="boton" title="Reiniciar (R)" aria-label="Reiniciar">
+        <span class="icono icono--reset" aria-hidden="true"></span>
+      </button>
+      <button type="button" id="btn-anterior" class="boton" title="Paso anterior (flecha izquierda)" aria-label="Paso anterior">
+        <span class="icono icono--anterior" aria-hidden="true"></span>
+      </button>
+      <button type="button" id="btn-play" class="boton boton--principal" title="Reproducir / pausa (espacio)" aria-label="Reproducir" aria-pressed="false">
+        <span class="icono icono--play" aria-hidden="true"></span>
+        <span class="boton__texto" id="btn-play-texto">Montar</span>
+      </button>
+      <button type="button" id="btn-siguiente" class="boton" title="Paso siguiente (flecha derecha)" aria-label="Paso siguiente">
+        <span class="icono icono--siguiente" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="transporte__scrub">
+      <input type="range" id="scrub" min="0" max="1" step="0.001" value="0"
+             aria-label="Progreso global del montaje">
+      <div class="transporte__barra" aria-hidden="true"><i id="progreso-barra"></i></div>
+    </div>
+
+    <div class="transporte__lectura">
+      <span class="lectura lectura--grande" id="paso-lectura">PASO --/--</span>
+      <span class="lectura lectura--tenue" id="paso-nombre">Sin secuencia cargada</span>
+    </div>
+
+    <div class="transporte__velocidad" id="grupo-velocidad" role="group" aria-label="Velocidad de la animacion">
+      <button type="button" class="chip" data-velocidad="0.5">0.5x</button>
+      <button type="button" class="chip activo" data-velocidad="1">1x</button>
+      <button type="button" class="chip" data-velocidad="2">2x</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- ===== Cargador ===== -->
+<div id="loader">
+  <div class="loader__marco" aria-hidden="true">
+    <span class="loader__manivela"></span>
+    <span class="loader__piston"></span>
+  </div>
+  <p class="loader__texto">Cargando plano...</p>
+  <p class="loader__nota">three.js r169 desde CDN</p>
+</div>
+
+<!-- ===== Errores (lo escribe main.js) ===== -->
+<div id="error" role="alert"></div>
+
+<noscript>
+  <div class="sin-js">Este plano necesita JavaScript (modulos ES) y una conexion a internet para cargar three.js.</div>
+</noscript>
+
+</body>
+</html>
